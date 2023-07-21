@@ -1,0 +1,73 @@
+#!/bin/bash
+
+set -euo pipefail
+
+SERVICE="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_SERVICE"
+EXPIRATION="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION"
+STAGE=${STAGE-`buildkite-agent meta-data get "$1"`}
+if [[ "$STAGE" =~ "prod" ]]; then IMD_STAGE="prod-au"; else IMD_STAGE="staging-au"; fi
+
+header='{
+  "typ": "JWT",
+  "alg": "RS256"
+}'
+
+payload='{
+  "subject": {
+    "id": "'"$SERVICE"'-1",
+    "name": "'"$SERVICE"'-service",
+    "type": "user",
+    "practice": {
+      "id": "'"$SERVICE"'-1",
+      "name": "'"$SERVICE"'-service"
+    },
+    "region": "AU"
+  },
+  "iss": "iCareWorld",
+  "aud": "'"$SERVICE"'"
+}'
+
+# Use jq to set the dynamic `iat` and `exp`
+# fields on the payload using the current time.
+# `iat` is set to now, and `exp` is now + $EXPIRATION second.
+payload=$(
+	echo "${payload}" | jq --arg time_str "$(date +%s)" \
+	'
+	($time_str | tonumber) as $time_num
+	| .iat=$time_num
+	| .exp=($time_num + '"$EXPIRATION"')
+	'
+)
+
+base64_encode()
+{
+	declare input=${1:-$(</dev/stdin)}
+	# Use `tr` to URL encode the output from base64.
+	printf '%s' "${input}" | base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n'
+}
+
+json() {
+	declare input=${1:-$(</dev/stdin)}
+	printf '%s' "${input}" | jq -c .
+}
+
+sign()
+{
+	declare input=${1:-$(</dev/stdin)}
+	printf '%s' "${input}" > EncodedMessage
+	aws kms sign --message fileb://EncodedMessage --key-id alias/${IMD_STAGE}-asymmetric-tenant-key --message-type RAW --signing-algorithm RSASSA_PKCS1_V1_5_SHA_256
+}
+
+header_base64=$(echo "${header}" | json | base64_encode)
+payload_base64=$(echo "${payload}" | json | base64_encode)
+
+message="${header_base64}.${payload_base64}"
+signature=$(echo "${message}" | sign | jq -r '.Signature') # The signature returned by aws is already base64 encoded!
+
+echo "AWS SIGNATURE, REMOVE AFTER TEST"
+test=$(echo "${message}" | sign)
+echo "${test}"
+echo "--------------------------------"
+
+echo "ICARE APIGATEWAY JWT GENERATED"
+export ICARE_APIGATEWAY_JWT="${message}.${signature}"
