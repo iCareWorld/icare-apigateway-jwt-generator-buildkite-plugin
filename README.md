@@ -12,6 +12,7 @@ steps:
     plugins:
       - iCareWorld/icare-apigateway-jwt-generator#v1.0.0:
           service: 'screening'
+          stage: 'staging-au'
           expiration: 120
 ```
 
