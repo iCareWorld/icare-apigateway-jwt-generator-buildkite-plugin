@@ -8,6 +8,10 @@ configuration:
       type: string
     stage:
       type: string
+    region:
+      type: string
     expiration:
       type: number
+  required:
+    - service
   additionalProperties: false

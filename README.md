@@ -10,10 +10,11 @@ Add the following to your `pipeline.yml`:
 steps:
   - command: sync_assets
     plugins:
-      - iCareWorld/icare-apigateway-jwt-generator#v1.0.0:
+      - iCareWorld/icare-apigateway-jwt-generator#v1.0.4:
           service: 'screening'
-          stage: 'staging-au'
-          expiration: 120
+          stage: 'staging-au' # optional, it would try to get the metadata "stage"
+          region: 'eu-north-1' # optional, it would try to get the metadata "stage"
+          expiration: 60 # optional, default to 120 (seconds)
 ```
 
 ## Validation

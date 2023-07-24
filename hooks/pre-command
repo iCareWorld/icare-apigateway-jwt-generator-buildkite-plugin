@@ -3,8 +3,25 @@
 set -euo pipefail
 
 SERVICE="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_SERVICE"
-EXPIRATION="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION"
-STAGE="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_STAGE"
+
+# if STAGE is not set, get buildkite to get the selected deploy stage
+STAGE=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_STAGE:-`buildkite-agent meta-data get "stage"`}
+EXPIRATION="${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION:-120}"
+
+declare -A regions
+
+regions["staging-au"]="ap-southeast-2"
+regions["staging-nz"]="ap-southeast-2"
+regions["staging-eu"]="eu-north-1"
+
+regions["demo-au"]="ap-southeast-2"
+regions["demo-eu"]="eu-north-1"
+
+regions["prod-au"]="ap-southeast-2"
+regions["prod-eu"]="eu-north-1"
+regions["prod-nz"]="ap-southeast-2"
+
+REGION=${$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_REGION:-regions[$STAGE]}
 
 header='{
   "typ": "JWT",
@@ -54,7 +71,7 @@ sign()
 {
 	declare input=${1:-$(</dev/stdin)}
 	printf '%s' "${input}" > EncodedMessage
-	aws kms sign --message fileb://EncodedMessage --key-id alias/${STAGE}-asymmetric-tenant-key --message-type RAW --signing-algorithm RSASSA_PKCS1_V1_5_SHA_256
+	aws kms sign --message fileb://EncodedMessage --region ${REGION} --key-id alias/${STAGE}-asymmetric-tenant-key --message-type RAW --signing-algorithm RSASSA_PKCS1_V1_5_SHA_256
 }
 
 header_base64=$(echo "${header}" | json | base64_encode)
