@@ -21,9 +21,15 @@ SERVICE="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_SERVICE"
 # Optional Vars
 # if STAGE is not set, get buildkite to get the selected deploy stage
 STAGE=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_STAGE:-`buildkite-agent meta-data get "stage"`}
-STAGE_REGION=${regions[$STAGE]}
-REGION=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_REGION:-"$STAGE_REGION"}
+
+# TODO: Remove this line to open up tp multi env. The only implementation now is import-map-deploy (only au)
+if [[ "$STAGE" =~ "prod" ]]; then STAGE="prod-au"; else STAGE="staging-au"; fi
+
+REGION=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_REGION:-"${regions[$STAGE]}"}
+echo "${REGION}"
+
 EXPIRATION="${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION:-60}"
+echo "${EXPIRATION}"
 
 header='{
   "typ": "JWT",
@@ -72,7 +78,7 @@ json() {
 sign()
 {
 	declare input=${1:-$(</dev/stdin)}
-	printf '%s' "${input}" > EncodedMessage
+	# printf '%s' "${input}" > EncodedMessage
 	aws kms sign --message fileb://EncodedMessage --region ${REGION} --key-id alias/${STAGE}-asymmetric-tenant-key --message-type RAW --signing-algorithm RSASSA_PKCS1_V1_5_SHA_256
 }
 
@@ -83,11 +89,3 @@ message="${header_base64}.${payload_base64}"
 signature=$(echo "${message}" | sign | jq -r '.Signature') # The signature returned by aws is already base64 encoded!
 
 export ICARE_APIGATEWAY_JWT="${message}.${signature}"
-
-signature_payload=$(echo "${message}" | sign | json)
-echo "SERVICE: ${SERVICE}"
-echo "STAGE: ${STAGE}"
-echo "REGION: ${REGION}"
-echo "EXPIRATION: ${EXPIRATION}"
-echo "AWS: ${signature_payload}"
-echo "JWT: ${message}.${signature}"
