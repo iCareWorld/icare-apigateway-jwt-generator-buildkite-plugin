@@ -11,7 +11,6 @@ load "$BATS_PLUGIN_PATH/load.bash"
   run "$PWD/hooks/pre-command"
 
   assert_success
-  assert_output --partial ".signature"
 
   unstub buildkite-agent
   unstub aws

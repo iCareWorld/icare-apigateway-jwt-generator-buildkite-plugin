@@ -14,7 +14,7 @@ steps:
           service: 'screening'
           stage: 'staging-au' # optional, it would try to get the metadata "stage"
           region: 'eu-north-1' # optional, it would try to get the metadata "stage"
-          expiration: 60 # optional, default to 120 (seconds)
+          expiration: 30 # optional, default to 60 (seconds)
 ```
 
 ## Validation

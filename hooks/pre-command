@@ -16,18 +16,13 @@ regions["prod-eu"]="eu-north-1"
 regions["prod-nz"]="ap-southeast-2"
 
 SERVICE="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_SERVICE"
-echo "SERVICE: ${SERVICE}"
 
+# Optional Vars
 # if STAGE is not set, get buildkite to get the selected deploy stage
 STAGE=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_STAGE:-`buildkite-agent meta-data get "stage"`}
 STAGE_REGION=${regions[$STAGE]}
-echo "STAGE: ${STAGE}, STAGE_REGION: ${STAGE_REGION}"
-
-EXPIRATION="${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION:-120}"
-echo "EXPIRATION: ${EXPIRATION}"
-
 REGION=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_REGION:-"$STAGE_REGION"}
-echo "REGION: ${REGION}"
+EXPIRATION="${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION:-60}"
 
 header='{
   "typ": "JWT",
@@ -86,11 +81,4 @@ payload_base64=$(echo "${payload}" | json | base64_encode)
 message="${header_base64}.${payload_base64}"
 signature=$(echo "${message}" | sign | jq -r '.Signature') # The signature returned by aws is already base64 encoded!
 
-echo "AWS SIGNATURE, REMOVE AFTER TEST"
-test=$(echo "${message}" | sign)
-echo "${test}"
-echo "--------------------------------"
-
 export ICARE_APIGATEWAY_JWT="${message}.${signature}"
-echo "ICARE APIGATEWAY JWT GENERATED"
-echo "${ICARE_APIGATEWAY_JWT}"
