@@ -1,5 +1,5 @@
 name: iCare ApiGateway JWT Generator
-description: Generate a JTW token to be used to authenticate requests to an iCare service via iCare ApiGateway
+description: Generate a JWT token to be used to authenticate requests to an iCare service via iCare ApiGateway
 author: https://github.com/iCareWorld
 requirements: []
 configuration:
