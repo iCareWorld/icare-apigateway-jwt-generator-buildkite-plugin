@@ -23,3 +23,9 @@ To validate the plugin run
 ```bash
 docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-linter --id iCareWorld/icare-apigateway-jwt-generator
 ```
+
+## Test
+
+```bash
+docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-tester
+```
