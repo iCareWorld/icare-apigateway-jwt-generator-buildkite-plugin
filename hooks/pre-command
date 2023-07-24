@@ -2,12 +2,6 @@
 
 set -euo pipefail
 
-SERVICE="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_SERVICE"
-
-# if STAGE is not set, get buildkite to get the selected deploy stage
-STAGE=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_STAGE:-`buildkite-agent meta-data get "stage"`}
-EXPIRATION="${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION:-120}"
-
 declare -A regions
 
 regions["staging-au"]="ap-southeast-2"
@@ -21,7 +15,18 @@ regions["prod-au"]="ap-southeast-2"
 regions["prod-eu"]="eu-north-1"
 regions["prod-nz"]="ap-southeast-2"
 
-REGION=${$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_REGION:-regions[$STAGE]}
+SERVICE="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_SERVICE"
+echo "SERVICE: ${SERVICE}"
+
+# if STAGE is not set, get buildkite to get the selected deploy stage
+STAGE=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_STAGE:-`buildkite-agent meta-data get "stage"`}
+echo "STAGE: ${STAGE}"
+
+EXPIRATION="${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION:-120}"
+echo "EXPIRATION: ${EXPIRATION}"
+
+REGION=${$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_REGION:-regions[STAGE]}
+echo "REGION: ${REGION}"
 
 header='{
   "typ": "JWT",
