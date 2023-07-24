@@ -26,10 +26,7 @@ STAGE=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_STAGE:-`buildkite-agent 
 if [[ "$STAGE" =~ "prod" ]]; then STAGE="prod-au"; else STAGE="staging-au"; fi
 
 REGION=${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_REGION:-"${regions[$STAGE]}"}
-echo "${REGION}"
-
 EXPIRATION="${BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION:-60}"
-echo "${EXPIRATION}"
 
 header='{
   "typ": "JWT",
@@ -78,7 +75,7 @@ json() {
 sign()
 {
 	declare input=${1:-$(</dev/stdin)}
-	# printf '%s' "${input}" > EncodedMessage
+	printf '%s' "${input}" > EncodedMessage
 	aws kms sign --message fileb://EncodedMessage --region ${REGION} --key-id alias/${STAGE}-asymmetric-tenant-key --message-type RAW --signing-algorithm RSASSA_PKCS1_V1_5_SHA_256
 }
 
