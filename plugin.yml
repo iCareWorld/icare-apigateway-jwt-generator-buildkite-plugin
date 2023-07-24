@@ -6,6 +6,8 @@ configuration:
   properties:
     service:
       type: string
+    region:
+      type: string
     stage:
       type: string
     expiration:

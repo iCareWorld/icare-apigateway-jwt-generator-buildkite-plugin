@@ -5,6 +5,7 @@ set -euo pipefail
 SERVICE="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_SERVICE"
 EXPIRATION="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_EXPIRATION"
 STAGE="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_STAGE"
+REGION="$BUILDKITE_PLUGIN_ICARE_APIGATEWAY_JWT_GENERATOR_REGION"
 
 header='{
   "typ": "JWT",
@@ -54,7 +55,7 @@ sign()
 {
 	declare input=${1:-$(</dev/stdin)}
 	printf '%s' "${input}" > EncodedMessage
-	aws kms sign --message fileb://EncodedMessage --key-id alias/${STAGE}-asymmetric-tenant-key --message-type RAW --signing-algorithm RSASSA_PKCS1_V1_5_SHA_256
+	aws kms sign --message fileb://EncodedMessage --region ${REGION} --key-id alias/${STAGE}-asymmetric-tenant-key --message-type RAW --signing-algorithm RSASSA_PKCS1_V1_5_SHA_256
 }
 
 header_base64=$(echo "${header}" | json | base64_encode)
