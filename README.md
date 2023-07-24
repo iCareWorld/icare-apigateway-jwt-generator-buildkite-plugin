@@ -29,3 +29,13 @@ docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-linter --id iCareWorld
 ```bash
 docker run -it --rm -v "$PWD:/plugin:ro" buildkite/plugin-tester
 ```
+
+# Notable issues
+
+At this moment, the only client of this plugin is `screening-service` to hit `import-map-deployer` and synk the frontend assets. 
+Unfortunatelly, that service is only deployed in `AU` so, temporarelly, we have some code in the hook that dinamically changes any other region to au. 
+
+```bash
+# TODO: Remove this line to open up tp multi env. The only implementation now is import-map-deploy (only au)
+if [[ "$STAGE" =~ "prod" ]]; then STAGE="prod-au"; else STAGE="staging-au"; fi
+```
